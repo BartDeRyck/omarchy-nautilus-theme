@@ -1,6 +1,6 @@
 ![alt text][screengrab1]
 
-[screengrab]: [screenshot-2026-09-01_13-08-57.png](https://github.com/ilJapo/omarchy-nautilus-theme/blob/890b9de8d4d0816b8ebfaee3d5499def65259760/screenshot-2026-09-01_13-08-57.png) "screengrab1"
+[screenshot-2026-09-01_13-08-57.png](https://github.com/ilJapo/omarchy-nautilus-theme/blob/890b9de8d4d0816b8ebfaee3d5499def65259760/screenshot-2026-09-01_13-08-57.png) "screengrab1"
 
 # Omarchy Quattro Dynamic Nautilus Theme
 
