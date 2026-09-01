@@ -93,10 +93,12 @@ window.nautilus-window .titlebar {
     background-color: transparent;
     color: @window_fg_color;
     font-weight: normal;
+    border-radius: 0;
 }
 .nautilus-path-bar button:hover {
     background-color: @card_bg_color;
     color: @accent_color;
+    border-radius: 0;
 }
 
 /* Sidebar (85%) */
@@ -105,61 +107,94 @@ window.nautilus-window .titlebar {
     color: @sidebar_fg_color;
     font-size: 85%;
 }
+.nautilus-window placessidebar row {
+    border-radius: 0;
+}
 .nautilus-window placessidebar row:selected {
     background-color: alpha(@accent_bg_color, 0.15);
     color: @accent_color;
     font-weight: normal;
+    border-radius: 0;
 }
 .nautilus-window placessidebar row:hover:not(:selected) {
     background-color: alpha(@headerbar_border_color, 0.2);
+    border-radius: 0;
+}
+
+/* Main View items / folders (Grid, List, Column views, and Icon View / Grid cells) */
+.nautilus-window flowboxchild,
+.nautilus-window .nautilus-view-kanban .card,
+.nautilus-window gridview child,
+.nautilus-window columnview row,
+.nautilus-window listview row,
+.nautilus-window .view item {
+    border-radius: 0;
+}
+
+.nautilus-window flowboxchild:hover,
+.nautilus-window gridview child:hover,
+.nautilus-window columnview row:hover,
+.nautilus-window listview row:hover,
+.nautilus-window .view item:hover {
+    background-color: alpha(@headerbar_border_color, 0.2);
+    border-radius: 0;
 }
 
 .nautilus-window flowboxchild:selected,
-.nautilus-window treeview:selected {
+.nautilus-window gridview child:selected,
+.nautilus-window treeview:selected,
+.nautilus-window columnview row:selected,
+.nautilus-window listview row:selected,
+.nautilus-window .view item:selected {
     background-color: alpha(@accent_bg_color, 0.15);
     color: @window_fg_color;
-    border-radius: 8px;
-    outline: 2px solid @accent_bg_color;
+    border-radius: 0;
+    outline: none;
+    box-shadow: none;
 }
 
 rubberband, .rubberband {
     background-color: alpha(@accent_bg_color, 0.20);
     border: 1px solid @accent_bg_color;
-    border-radius: 4px;
+    border-radius: 0;
 }
 
 .nautilus-window button:not(.flat):not(.suggested-action):not(.destructive-action) {
     background-color: @card_bg_color;
     color: @window_fg_color;
     border: 1px solid @headerbar_border_color;
-    border-radius: 6px;
+    border-radius: 0;
 }
 .nautilus-window button:hover:not(.flat) {
     background-color: shade(@card_bg_color, 1.5); 
     color: @window_fg_color;
+    border-radius: 0;
 }
 .nautilus-window button:checked,
 .nautilus-window button:active {
     background-color: @accent_bg_color;
     color: @accent_fg_color;
+    border-radius: 0;
 }
 
 .nautilus-window entry {
     background-color: @sidebar_bg_color;
     color: @window_fg_color;
     border: 1px solid @headerbar_border_color;
-    border-radius: 6px;
+    border-radius: 0;
 }
 .nautilus-window entry:focus {
     border-color: @accent_color;
     box-shadow: 0 0 0 2px alpha(@accent_color, 0.3);
+    border-radius: 0;
 }
 
 scrollbar slider {
     background-color: @headerbar_border_color;
-    border-radius: 10px;
+    border-radius: 0;
 }
 scrollbar slider:hover,
 scrollbar slider:active {
     background-color: @accent_color;
+    border-radius: 0;
 }
