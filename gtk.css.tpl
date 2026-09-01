@@ -47,50 +47,68 @@
 
 /* 2. Nautilus Specific Overrides */
 
-/* Apply JetBrains Mono globally to Nautilus */
+/* JetBrains Mono, ridimensionamento all'85% e pulizia bordi Libadwaita */
 window.nautilus-window {
     font-family: "JetBrainsMono", "JetBrains Mono", monospace;
+    font-size: 85%;
+    --headerbar-border-color: transparent;
+    --headerbar-shade-color: transparent;
+    --headerbar-darker-shade-color: transparent;
 }
 
-/* Target 83.33% font size to Main View */
+/* Rimuove l'ombra undershoot della top bar */
+window.nautilus-window undershoot.top {
+    background-image: none;
+    background-color: transparent;
+    box-shadow: none;
+}
+
+/* Ripristina il separatore verticale standard tra sidebar e vista principale */
+window.nautilus-window separator {
+    background-color: @headerbar_border_color;
+    min-width: 1px;
+}
+
+/* Main View (85%) */
 window.nautilus-window,
 window.nautilus-window base,
 .nautilus-window notebook,
 .nautilus-window view {
     background-color: @view_bg_color;
     color: @view_fg_color;
-    font-size: 0.8333rem;
+    font-size: 85%;
 }
 
-/* Target 83.33% font size to Top Bar */
-window.nautilus-window headerbar {
+/* Top Bar (85%) */
+window.nautilus-window headerbar,
+window.nautilus-window .titlebar {
     background-color: @headerbar_bg_color;
     color: @headerbar_fg_color;
-    border-bottom: 1px solid @headerbar_border_color;
+    border: none;
     box-shadow: none;
-    font-size: 0.8333rem;
+    font-size: 85%;
 }
 
 .nautilus-path-bar button {
     background-color: transparent;
     color: @window_fg_color;
-    font-weight: bold;
+    font-weight: normal;
 }
 .nautilus-path-bar button:hover {
     background-color: @card_bg_color;
     color: @accent_color;
 }
 
-/* Target 83.33% font size to Sidebar */
+/* Sidebar (85%) */
 .nautilus-window placessidebar {
     background-color: @sidebar_bg_color;
     color: @sidebar_fg_color;
-    font-size: 0.8333rem;
+    font-size: 85%;
 }
 .nautilus-window placessidebar row:selected {
     background-color: alpha(@accent_bg_color, 0.15);
     color: @accent_color;
-    font-weight: bold;
+    font-weight: normal;
 }
 .nautilus-window placessidebar row:hover:not(:selected) {
     background-color: alpha(@headerbar_border_color, 0.2);
