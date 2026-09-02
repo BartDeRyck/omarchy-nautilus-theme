@@ -352,6 +352,7 @@ class TestPalettes(unittest.TestCase):
         )
 
 
+@unittest.skipIf(Gtk is None, f"GTK4 GObject bindings not available: {GTK_IMPORT_ERROR}")
 class TestGtk4CssValidation(unittest.TestCase):
     """Validates that rendered CSS parses cleanly in GTK4 without errors."""
 
