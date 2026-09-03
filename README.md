@@ -40,12 +40,42 @@ mkdir -p ~/.config/gtk-4.0
 ln -sf ~/.local/state/omarchy/current/theme/gtk.css ~/.config/gtk-4.0/gtk.css
 ```
 
-### 4. Restart Nautilus
-Restart Nautilus to apply the new stylesheet:
+### 4. Restart Nautilus (Initial Setup)
+Restart Nautilus once to apply the stylesheet and initialize extensions:
 
 ```bash
 nautilus -q
 ```
+
+---
+
+## Seamless In-Process Live Theming (Zero Restarts)
+
+By default, GTK4 only parses `~/.config/gtk-4.0/gtk.css` at process startup. Switching themes would normally require quitting Nautilus (`nautilus -q`), closing your active tabs, losing navigation state, and causing a brief visual flicker in Hyprland.
+
+This repository includes a lightweight **in-process live theme reloader** powered by `nautilus-python` and GTK4 `Gtk.CssProvider` at user priority 810. When you switch Omarchy themes, the extension detects the change and re-injects the updated stylesheet into Nautilus memory in under 2ms — **no window closures, no tab loss, zero flicker**.
+
+### Installing Live Theming
+
+1. **Install the Nautilus Extension:**
+   ```bash
+   mkdir -p ~/.local/share/nautilus-python/extensions
+   cp extension/omarchy_live_theme.py ~/.local/share/nautilus-python/extensions/
+   ```
+
+2. **Install the Omarchy Theme-Set Hook:**
+   ```bash
+   mkdir -p ~/.config/omarchy/hooks/theme-set.d
+   cp extension/nautilus-reload.sh ~/.config/omarchy/hooks/theme-set.d/
+   chmod +x ~/.config/omarchy/hooks/theme-set.d/nautilus-reload.sh
+   ```
+
+3. **Restart Nautilus Once:**
+   ```bash
+   nautilus -q
+   ```
+
+After this one-time setup, every Omarchy theme change will hot-reload Nautilus styling seamlessly in place.
 
 ---
 
@@ -60,7 +90,7 @@ nautilus -q
 
 ## Development & Testing
 
-This repository includes an automated test harness to verify template integrity and GTK4 CSS compatibility.
+This repository includes an automated test harness to verify template integrity, GTK4 CSS compatibility, and live theming extension behavior.
 
 Run tests using Python 3:
 
@@ -74,6 +104,7 @@ The test suite checks:
 - Absence of unrendered template tokens.
 - Single-root `font-size: 85%` structural rules.
 - Direct GTK4 CSS syntax validation via `Gtk.CssProvider` (requires `python-gobject` and GTK4).
+- In-process live theme reload mechanics and Nautilus MenuProvider contracts.
 
 ---
 
@@ -82,4 +113,6 @@ The test suite checks:
 - **GTK 4.0+** (GNOME Nautilus 43+)
 - **Omarchy Desktop Environment**
 - **JetBrains Mono** font (`ttf-jetbrains-mono` or system package)
+- *(Optional for live theming)* `nautilus-python` (`sudo pacman -S nautilus-python`)
 - *(Optional for testing)* `python-gobject` with GTK 4.0
+

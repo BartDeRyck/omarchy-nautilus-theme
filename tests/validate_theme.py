@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import re
 import sys
+import tempfile
 import unittest
 
 # Ensure GTK 4.0 is required before importing Gtk
@@ -25,6 +26,23 @@ except (ValueError, ImportError) as e:
     GTK_IMPORT_ERROR = str(e)
 else:
     GTK_IMPORT_ERROR = None
+
+# Attempt to import live theming extension for Nautilus testing
+try:
+    import gi
+    gi.require_version("Nautilus", "4.1")
+    gi.require_version("Gtk", "4.0")
+    gi.require_version("Gdk", "4.0")
+    from gi.repository import Nautilus, Gdk, GLib, Gio
+    EXTENSION_DIR = str(Path(__file__).resolve().parent.parent / "extension")
+    if EXTENSION_DIR not in sys.path:
+        sys.path.insert(0, EXTENSION_DIR)
+    from omarchy_live_theme import OmarchyLiveThemeExtension
+except (ValueError, ImportError) as e:
+    OmarchyLiveThemeExtension = None
+    LIVE_THEME_IMPORT_ERROR = str(e)
+else:
+    LIVE_THEME_IMPORT_ERROR = None
 
 TEMPLATE_PATH = Path(__file__).resolve().parent.parent / "gtk.css.tpl"
 
@@ -421,6 +439,47 @@ class TestTemplateStructure(unittest.TestCase):
             1,
             f"Expected exactly 1 root window.nautilus-window font-size declaration, found {root_count}",
         )
+
+
+@unittest.skipIf(
+    OmarchyLiveThemeExtension is None,
+    f"Nautilus / GTK4 PyGObject bindings not available: {LIVE_THEME_IMPORT_ERROR}",
+)
+class TestLiveThemeExtension(unittest.TestCase):
+    """Validate in-process live theming Nautilus extension behavior."""
+
+    def setUp(self) -> None:
+        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.css_file = Path(self.tmp_dir.name) / "gtk.css"
+        self.trigger_file = Path(self.tmp_dir.name) / "nautilus-reload"
+        self.css_file.write_text("window.nautilus-window { background-color: #123456; }")
+
+    def tearDown(self) -> None:
+        self.tmp_dir.cleanup()
+
+    def test_extension_menu_items_empty(self) -> None:
+        ext = OmarchyLiveThemeExtension(
+            css_path=str(self.css_file),
+            trigger_path=str(self.trigger_file),
+        )
+        self.assertEqual(ext.get_file_items(), [])
+        self.assertEqual(ext.get_background_items(), [])
+
+    def test_live_css_reload(self) -> None:
+        ext = OmarchyLiveThemeExtension(
+            css_path=str(self.css_file),
+            trigger_path=str(self.trigger_file),
+        )
+        # Force immediate setup on default display
+        ext._setup()
+        self.assertIsNotNone(ext.provider)
+        self.assertEqual(ext.reload_count, 1)
+
+        # Update CSS file content and trigger reload
+        self.css_file.write_text("window.nautilus-window { background-color: #abcdef; }")
+        success = ext.reload_css()
+        self.assertTrue(success)
+        self.assertEqual(ext.reload_count, 2)
 
 
 if __name__ == "__main__":
