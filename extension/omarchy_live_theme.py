@@ -18,6 +18,12 @@ require_version("Gdk", "4.0")
 
 from gi.repository import Gdk, Gio, GLib, GObject, Gtk, Nautilus  # noqa: E402
 
+try:
+    require_version("Adw", "1")
+    from gi.repository import Adw
+except (ValueError, ImportError):
+    Adw = None  # type: ignore[assignment]
+
 if TYPE_CHECKING:
     pass
 
@@ -29,14 +35,19 @@ class OmarchyLiveThemeExtension(GObject.GObject, Nautilus.MenuProvider):
         self,
         css_path: str | None = None,
         trigger_path: str | None = None,
+        theme_dir_path: str | None = None,
     ) -> None:
         super().__init__()
         self.css_path = css_path or os.path.expanduser("~/.config/gtk-4.0/gtk.css")
         self.trigger_path = trigger_path or os.path.expanduser(
             "~/.local/state/omarchy/nautilus-reload"
         )
+        self.theme_dir_path = theme_dir_path or os.path.expanduser(
+            "~/.local/state/omarchy/current/theme"
+        )
         self.provider: Gtk.CssProvider | None = None
         self._monitors: list[Gio.FileMonitor] = []
+        self._settings: Gio.Settings | None = None
         self._debounce_source_id: int | None = None
         self.reload_count = 0
 
@@ -63,7 +74,7 @@ class OmarchyLiveThemeExtension(GObject.GObject, Nautilus.MenuProvider):
         # Initial stylesheet load
         self.reload_css()
 
-        # Set up filesystem monitors
+        # Set up filesystem monitors & desktop interface listeners
         self._setup_monitors()
         return GLib.SOURCE_REMOVE
 
@@ -86,7 +97,7 @@ class OmarchyLiveThemeExtension(GObject.GObject, Nautilus.MenuProvider):
             return False
 
     def _setup_monitors(self) -> None:
-        """Watch the reload trigger file and the active gtk.css for updates."""
+        """Watch the reload trigger file, active theme directory, and desktop settings."""
         trigger_dir = os.path.dirname(self.trigger_path)
         if not os.path.exists(trigger_dir):
             try:
@@ -113,18 +124,42 @@ class OmarchyLiveThemeExtension(GObject.GObject, Nautilus.MenuProvider):
             css_monitor.connect("changed", self._on_file_changed)
             self._monitors.append(css_monitor)
 
+        # 3. Monitor ~/.local/state/omarchy/current/theme directory for atomic theme swaps
+        if os.path.exists(self.theme_dir_path):
+            theme_dir = Gio.File.new_for_path(self.theme_dir_path)
+            theme_dir_monitor = theme_dir.monitor_directory(Gio.FileMonitorFlags.NONE, None)
+            theme_dir_monitor.connect("changed", self._on_file_changed)
+            self._monitors.append(theme_dir_monitor)
+
+        # 4. Connect to GNOME desktop interface settings for instant color-scheme switches
+        try:
+            self._settings = Gio.Settings.new("org.gnome.desktop.interface")
+            self._settings.connect("changed::color-scheme", self._on_setting_changed)
+            self._settings.connect("changed::gtk-theme", self._on_setting_changed)
+            self._settings.connect("changed::icon-theme", self._on_setting_changed)
+        except Exception:
+            pass
+
+    def _on_setting_changed(self, _settings: Gio.Settings, _key: str) -> None:
+        """Trigger debounced CSS reload immediately when color-scheme or theme changes."""
+        self._schedule_reload()
+
     def _on_file_changed(
         self,
-        monitor: Gio.FileMonitor,
-        file: Gio.File,
-        other_file: Gio.File | None,
-        event_type: Gio.FileMonitorEvent,
+        _monitor: Gio.FileMonitor,
+        _file: Gio.File,
+        _other_file: Gio.File | None,
+        _event_type: Gio.FileMonitorEvent,
     ) -> None:
-        # Debounce rapid successive events (e.g. create + attribute change)
+        """Trigger debounced CSS reload when filesystem changes occur."""
+        self._schedule_reload()
+
+    def _schedule_reload(self) -> None:
+        """Debounce rapid successive events (GSettings change + atomic directory swap + hook)."""
         if self._debounce_source_id is not None:
             GLib.source_remove(self._debounce_source_id)
 
-        self._debounce_source_id = GLib.timeout_add(75, self._debounced_reload)
+        self._debounce_source_id = GLib.timeout_add(50, self._debounced_reload)
 
     def _debounced_reload(self) -> bool:
         self._debounce_source_id = None
